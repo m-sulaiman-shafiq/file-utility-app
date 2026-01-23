@@ -1,21 +1,14 @@
-import ToolWrapper from "@/components/ToolWrapper";
-import { Button } from "@/components/ui/button";
+import FileConverter from "@/components/FileConverter";
 
 export default function PdfToWordPage() {
   return (
-    <ToolWrapper
+    <FileConverter
       title="PDF to Word Converter"
       description="Convert your PDF files to Word documents quickly and easily."
-    >
-      {/* Upload section */}
-      <input
-        type="file"
-        accept="application/pdf"
-        className="border p-2 rounded w-full mb-4"
-      />
-
-      {/* Convert button */}
-      <Button className="w-full">Convert PDF to Word</Button>
-    </ToolWrapper>
+      apiEndpoint="/api/pdf-to-word"
+      accept="application/pdf"
+      outputFileName="converted.docx"
+      buttonText="Convert PDF to Word"
+    />
   );
 }
