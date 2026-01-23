@@ -1,18 +1,17 @@
-import ToolWrapper from "@/components/ToolWrapper";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import FileConverter from "@/components/FileConverter";
+import { FileText } from "lucide-react";
 
 export default function WordToPdfPage() {
   return (
-    <ToolWrapper
-      title="PDF to Word Converter"
-      description="Convert your PDF files to Word documents quickly and easily."
-    >
-      {/* Upload section */}
-      <Input type="file" accept=".doc,.docx" className="mb-4" />
-
-      {/* Convert button */}
-      <Button className="w-full">Convert PDF to Word</Button>
-    </ToolWrapper>
+    <FileConverter
+      title="Word to PDF Converter"
+      description="Convert your Word documents to PDF quickly and easily."
+      apiEndpoint="/api/word-to-pdf"
+      accept=".doc,.docx"
+      outputFileName="converted.pdf"
+      buttonText="Convert Word to PDF"
+      fromIcon={<FileText className="w-8 h-8 text-blue-600" />}   // Word
+      toIcon={<FileText className="w-8 h-8 text-red-600" />}    // PDF
+    />
   );
 }

@@ -1,4 +1,5 @@
 import FileConverter from "@/components/FileConverter";
+import { FileText } from "lucide-react";
 
 export default function PdfToWordPage() {
   return (
@@ -9,6 +10,8 @@ export default function PdfToWordPage() {
       accept="application/pdf"
       outputFileName="converted.docx"
       buttonText="Convert PDF to Word"
+      fromIcon={<FileText className="w-8 h-8 text-red-600" />}
+      toIcon={<FileText className="w-8 h-8 text-blue-600" />}
     />
   );
 }

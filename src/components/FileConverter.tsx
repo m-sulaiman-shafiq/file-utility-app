@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { Upload, FileText, ArrowRight } from "lucide-react";
-import ToolWrapper from "@/components/ToolWrapper";
 
 type FileConverterProps = {
   title: string;
@@ -11,6 +10,8 @@ type FileConverterProps = {
   accept: string;
   outputFileName: string;
   buttonText: string;
+  fromIcon: React.ReactNode;
+  toIcon: React.ReactNode;
 };
 
 export default function FileConverter({
@@ -20,9 +21,12 @@ export default function FileConverter({
   accept,
   outputFileName,
   buttonText,
+  fromIcon,
+  toIcon,
 }: FileConverterProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,24 +65,44 @@ export default function FileConverter({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) {
+      setFile(droppedFile);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center px-4 pt-24">
       <div className="w-full max-w-3xl text-center">
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          {title}
-        </h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">{title}</h1>
 
         {/* Description with icons */}
-        <p className="text-gray-600 mb-10 flex items-center justify-center gap-2 flex-wrap">
-          <FileText className="w-5 h-5 text-blue-600" />
+        <p className="text-gray-600 flex items-center justify-center gap-2 flex-wrap">
           {description}
-          <ArrowRight className="w-5 h-5 text-gray-400" />
-          <span className="font-medium text-gray-700">
-            Fast & Secure
-          </span>
         </p>
-
+        <div className="flex items-center justify-center gap-4">
+          <div className="w-14 h-14 flex items-center justify-center rounded-xl">
+            {fromIcon}
+          </div>
+          <ArrowRight className="w-6 h-6 text-gray-400" />
+          <div className="w-14 h-14 flex items-center justify-center rounded-xl">
+            {toIcon}
+          </div>
+        </div>
         {/* Hidden input */}
         <input
           ref={inputRef}
@@ -87,7 +111,6 @@ export default function FileConverter({
           onChange={handleFileSelect}
           className="hidden"
         />
-
         {/* Upload button */}
         {!file ? (
           <button
@@ -115,10 +138,27 @@ export default function FileConverter({
           </button>
         )}
 
-        {/* Helper text */}
-        <p className="mt-4 text-sm text-gray-500">
-          or drop file here
-        </p>
+        {/* drag and drop */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleButtonClick}
+          className={`mt-6 mx-auto max-w-xl
+    border-2 border-dashed rounded-xl
+    px-6 py-20 cursor-pointer transition bg-white
+    ${
+      isDragging
+        ? "border-blue-600 bg-blue-50"
+        : "border-gray-300 hover:border-blue-400"
+    }
+  `}
+        >
+          <p className="text-gray-600 font-medium">
+            Drag & drop your file here
+          </p>
+          <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+        </div>
       </div>
     </div>
   );
