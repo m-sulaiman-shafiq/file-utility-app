@@ -94,7 +94,7 @@ export default function FileConverter({
         <p className="text-gray-600 flex items-center justify-center gap-2 flex-wrap">
           {description}
         </p>
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center">
           <div className="w-14 h-14 flex items-center justify-center rounded-xl">
             {fromIcon}
           </div>
@@ -146,18 +146,25 @@ export default function FileConverter({
           onClick={handleButtonClick}
           className={`mt-6 mx-auto max-w-xl
     border-2 border-dashed rounded-xl
-    px-6 py-20 cursor-pointer transition bg-white
+    px-6 py-20 cursor-pointer transition bg-white hover:bg-gray-100
     ${
       isDragging
         ? "border-blue-600 bg-blue-50"
         : "border-gray-300 hover:border-blue-400"
     }
   `}
-        >
+        ><div className="flex flex-col items-center">
+             <img
+            className="h-12 w-12 opacity-50"
+            src="./dragdrop.png"
+            alt="drag and drop"
+            />
           <p className="text-gray-600 font-medium">
             Drag & drop your file here
           </p>
           <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+        </div>
+           
         </div>
       </div>
     </div>
