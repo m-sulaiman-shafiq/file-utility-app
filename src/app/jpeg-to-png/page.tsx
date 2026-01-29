@@ -10,8 +10,8 @@ export default function JpegToPngPage() {
       accept=".jpg,.jpeg"
       outputFileName="converted.png"
       buttonText="Convert JPEG to PNG"
-      fromIcon={<Image className="w-8 h-8 text-orange-500" />}   // JPEG
-      toIcon={<Image className="w-8 h-8 text-green-600" />}      // PNG
+      fromIcon={<Image className="w-8 h-8 text-orange-500" />} // JPEG
+      toIcon={<Image className="w-8 h-8 text-green-600" />} // PNG
     />
   );
 }
