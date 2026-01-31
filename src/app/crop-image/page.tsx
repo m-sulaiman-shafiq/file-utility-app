@@ -7,6 +7,7 @@ import "react-image-crop/dist/ReactCrop.css";
 import ToolWrapper from "@/components/ToolWrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Download, Upload } from "lucide-react";
 
 export default function CropImagePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -65,7 +66,7 @@ export default function CropImagePage() {
         0,
         0,
         completedCrop.width * scaleX,
-        completedCrop.height * scaleY,
+        completedCrop.height * scaleY
       );
 
       canvas.toBlob((blob) => {
@@ -110,100 +111,118 @@ export default function CropImagePage() {
   };
 
   return (
-    <ToolWrapper
-      title="Crop Image"
-      description="Crop your image like Photoshop — resize the crop box and download the cropped image."
-    >
-      {/* Upload */}
-      <div className="space-y-3 mb-5">
-        <Input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={onFileChange}
-        />
+    <div className="min-h-screen bg-gray-50 flex !justify-center text-center px-4 pt-24">
+      <ToolWrapper
+        title="Crop Image"
+        description="Crop your image like Photoshop — resize the crop box and download the cropped image."
+      >
+        {/* Upload */}
+        <div className="space-y-3 mb-5">
+          {/* Hidden file input */}
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={onFileChange}
+            className="hidden"
+          />
+
+          {/* Custom Upload Button */}
+          {!imageSrc && (
+            <Button
+              className="!text-white"
+              variant="primary"
+              onClick={() => fileInputRef.current?.click()}
+              size="xl"
+            >
+              <Upload className="!w-6 !h-6" />
+              Upload Image
+            </Button>
+          )}
+
+          {imageSrc && (
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                setImageSrc(null);
+                setCompletedCrop(null);
+                setImgRef(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                setZoom(1);
+              }}
+            >
+              Remove Image
+            </Button>
+          )}
+        </div>
 
         {imageSrc && (
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={() => {
-              setImageSrc(null);
-              setCompletedCrop(null);
-              setImgRef(null);
-              if (fileInputRef.current) fileInputRef.current.value = "";
-              setZoom(1);
-            }}
-          >
-            Remove Image
-          </Button>
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium">Zoom</p>
+              <p className="text-sm text-muted-foreground">
+                {Math.round(zoom * 100)}%
+              </p>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
         )}
-      </div>
-
-      {imageSrc && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">Zoom</p>
-            <p className="text-sm text-muted-foreground">
-              {Math.round(zoom * 100)}%
-            </p>
+        {/* Crop Area */}
+        {!imageSrc ? (
+          <div className="text-sm text-muted-foreground">
+            Upload an image to start cropping.
           </div>
-
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.05}
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="w-full"
-          />
-        </div>
-      )}
-
-      {/* Crop Area */}
-      {!imageSrc ? (
-        <div className="text-sm text-muted-foreground">
-          Upload an image to start cropping.
-        </div>
-      ) : (
-        <>
-          <div
-            className="border rounded-xl p-3 bg-white mb-4 overflow-auto"
-            onWheel={handleWheelZoom}
-          >
-            <ReactCrop
-              crop={crop}
-              onChange={(c) => setCrop(c)}
-              onComplete={(c) => setCompletedCrop(c)}
-              keepSelection
+        ) : (
+          <>
+            <div
+              className="border rounded-xl p-3 bg-white mb-4 overflow-auto"
+              onWheel={handleWheelZoom}
             >
-              <div
-                style={{
-                  display: "inline-block",
-                  transformOrigin: "top left",
-                  transform: `translate(${getZoomTranslateX()}px, ${getZoomTranslateY()}px) scale(${zoom})`,
-                }}
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                keepSelection
               >
-                <img
-                  src={imageSrc}
-                  alt="Crop source"
-                  onLoad={(e) => setImgRef(e.currentTarget)}
-                  className="max-h-[480px] w-auto mx-auto"
-                />
-              </div>
-            </ReactCrop>
-          </div>
-
-          <Button
-            className="w-full"
-            disabled={!completedCrop || isCropping}
-            onClick={downloadCroppedImage}
-          >
-            {isCropping ? "Cropping..." : "Download Cropped Image"}
-          </Button>
-        </>
-      )}
-    </ToolWrapper>
+                <div
+                  style={{
+                    display: "inline-block",
+                    transformOrigin: "top left",
+                    transform: `translate(${getZoomTranslateX()}px, ${getZoomTranslateY()}px) scale(${zoom})`,
+                  }}
+                >
+                  <img
+                    src={imageSrc}
+                    alt="Crop source"
+                    onLoad={(e) => setImgRef(e.currentTarget)}
+                    className="max-h-[480px] w-auto mx-auto"
+                  />
+                </div>
+              </ReactCrop>
+            </div>
+            <div className="flex justify-center">
+              <Button
+                disabled={!completedCrop || isCropping}
+                onClick={downloadCroppedImage}
+                variant="primary"
+                size="xl"
+              >
+                <Download size={18} />
+                {isCropping ? "Cropping..." : "Download Cropped Image"}
+              </Button>
+            </div>
+          </>
+        )}
+      </ToolWrapper>
+    </div>
   );
 }
