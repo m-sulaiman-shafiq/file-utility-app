@@ -115,6 +115,15 @@ export default function CropImagePage() {
       <ToolWrapper
         title="Crop Image"
         description="Crop your image like Photoshop — resize the crop box and download the cropped image."
+        afterDescription={
+          <div className="flex justify-center">
+            <img
+              src="/crop.png"
+              alt="Image Crop icon"
+              className="h-12 w-auto"
+            />
+          </div>
+        }
       >
         {/* Upload */}
         <div className="space-y-3 mb-5">
@@ -142,8 +151,8 @@ export default function CropImagePage() {
 
           {imageSrc && (
             <Button
-              variant="secondary"
-              className="w-full"
+              variant="destructive"
+              className=""
               onClick={() => {
                 setImageSrc(null);
                 setCompletedCrop(null);
