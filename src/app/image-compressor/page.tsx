@@ -1,10 +1,13 @@
 "use client";
-
+import imageCompression, { Options } from "browser-image-compression";
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useRef } from "react";
+import { Loader2 } from "lucide-react";
+
 import {
   Select,
   SelectContent,
@@ -13,12 +16,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 type Mode = "targetSize" | "percentage";
 type SizeUnit = "KB" | "MB";
 
 export default function ImageCompressorPage() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [file, setFile] = useState<File | null>(null);
+  const [compressedFile, setCompressedFile] = useState<File | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+
   const [mode, setMode] = useState<Mode>("targetSize");
 
   // Row 1 (target size)
@@ -43,7 +51,8 @@ export default function ImageCompressorPage() {
   const isValidTargetSize = useMemo(() => {
     if (!isTargetSizeMode) return true;
     if (!Number.isFinite(parsedTargetSize)) return false;
-    if (targetUnit === "KB") return parsedTargetSize >= 1 && parsedTargetSize <= 30000;
+    if (targetUnit === "KB")
+      return parsedTargetSize >= 1 && parsedTargetSize <= 30000;
     return parsedTargetSize >= 0.1 && parsedTargetSize <= 30;
   }, [isTargetSizeMode, parsedTargetSize, targetUnit]);
 
@@ -55,47 +64,151 @@ export default function ImageCompressorPage() {
 
   const canCompress = isValidTargetSize && isValidPercentage;
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCompress = async () => {
+    if (!file) return;
+
+    console.log("Compress button clicked!");
+    console.log("Original size:", file.size / 1024, "KB");
+
+    setIsCompressing(true);
+    setCompressedFile(null);
+
+    try {
+      const options: any = {
+        useWebWorker: true,
+        fileType: file.type,
+      };
+
+      if (mode === "percentage") {
+        options.initialQuality = parsedPercentage / 100;
+      }
+
+      if (mode === "targetSize") {
+        options.maxSizeMB =
+          targetUnit === "KB" ? parsedTargetSize / 1024 : parsedTargetSize;
+      }
+
+      console.log("Compression options:", options);
+
+      const compressedBlob = await imageCompression(file, options);
+
+      console.log("Compressed size:", compressedBlob.size / 1024, "KB");
+
+      const compressed = new File([compressedBlob], `compressed-${file.name}`, {
+        type: file.type,
+      });
+
+      setCompressedFile(compressed);
+    } catch (err) {
+      console.error("Compression failed:", err);
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  function handleReset() {
+    setFile(null);
+    setCompressedFile(null);
+  }
+
   return (
     <div className="w-full max-w-3xl mx-auto p-4 md:p-6">
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-xl md:text-2xl">Image Compressor</CardTitle>
+          <CardTitle className="text-xl md:text-2xl">
+            Image Compressor
+          </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Compress JPG/PNG/WebP images by selecting either a target size or a percentage.
+            Compress JPG/PNG/WebP images by selecting either a target size or a
+            percentage.
           </p>
         </CardHeader>
 
         <CardContent className="space-y-6">
           {/* Upload placeholder (we will connect later) */}
-          <div className="rounded-2xl border border-dashed p-6 text-center">
+          <div className="rounded-2xl border-2 border-dashed p-6 text-center">
             <p className="text-sm font-medium">Drop your image here</p>
             <p className="text-xs text-muted-foreground mt-1">
               or click upload (we will connect upload logic next)
             </p>
-            <div className="mt-4">
-              <Button variant="secondary" className="rounded-xl">
+            <div className="mt-4 flex flex-col items-center">
+              <Button
+                variant="primary"
+                className="rounded-xl"
+                onClick={handleUploadClick}
+                disabled={isCompressing}
+              >
                 Upload Image
               </Button>
+              {isCompressing && (
+                <p className="text-xs pt-2 text-red-600 font-bold">
+                  Compressing image, please wait…
+                </p>
+              )}
+
+              {file && (
+                <div className="mt-4 flex flex-col justify-center items-center">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Selected"
+                    className="max-h-16 rounded border"
+                  />
+                  {file && (
+                    <p className="text-[10px] ">
+                      Current Size:{" "}
+                      <span className="font-bold">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </span>
+                    </p>
+                  )}
+                  {compressedFile && (
+                    <div className="mt-4 rounded-xl border p-3">
+                      <p className="text-sm font-medium text-green-600">
+                        Compression successful 🎉
+                      </p>
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Original: {(file!.size / 1024).toFixed(1)} KB
+                        {" → "}
+                        Compressed: {(compressedFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  )}
+                  {compressedFile && (
+                    <Button
+                      variant="destructive"
+                      className="mt-3 rounded-xl"
+                      onClick={() => {
+                        const url = URL.createObjectURL(compressedFile);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = compressedFile.name;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      Download Compressed Image
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          <Separator />
-
           {/* Two-row compressor controls */}
-          <RadioGroup
-            value={mode}
-            onValueChange={(v) => setMode(v as Mode)}
-            className="space-y-5"
-          >
+          <RadioGroup value={mode} onValueChange={(v) => setMode(v as Mode)}>
             {/* Row 1 */}
-            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-2">
               <div className="flex items-center gap-3 md:w-[260px]">
                 <RadioGroupItem value="targetSize" id="targetSize" />
                 <Label htmlFor="targetSize" className="font-medium">
                   Compress image to:
                 </Label>
               </div>
-
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
                 <Input
                   value={targetSize}
@@ -126,7 +239,7 @@ export default function ImageCompressorPage() {
             </div>
 
             {/* Row 2 */}
-            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-2">
               <div className="flex items-center gap-3 md:w-[260px]">
                 <RadioGroupItem value="percentage" id="percentage" />
                 <Label htmlFor="percentage" className="font-medium">
@@ -151,7 +264,6 @@ export default function ImageCompressorPage() {
               </div>
             </div>
           </RadioGroup>
-
           {/* Validation messages */}
           <div className="space-y-2">
             {isTargetSizeMode && !isValidTargetSize && (
@@ -166,18 +278,44 @@ export default function ImageCompressorPage() {
               </p>
             )}
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
-            <Button variant="outline" className="rounded-xl">
-              Reset
-            </Button>
-
-            <Button className="rounded-xl" disabled={!canCompress}>
-              Compress Image
-            </Button>
-          </div>
+          {file && (
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                onClick={handleReset}
+              >
+                Reset
+              </Button>
+              {!compressedFile && (
+                <Button
+                  className="rounded-xl"
+                  disabled={isCompressing || !file || !canCompress}
+                  onClick={handleCompress}
+                >
+                  Compress Image
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
+      {/* INput for Upload BUtton */}
+      <Input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const selected = e.target.files?.[0];
+          if (selected) {
+            // console.log("Selected file now:", selected);
+
+            setFile(selected);
+            setCompressedFile(null);
+          }
+        }}
+      />
     </div>
   );
 }
