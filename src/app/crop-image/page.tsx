@@ -111,7 +111,7 @@ export default function CropImagePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex !justify-center text-center px-4 pt-24">
+    <div className="bg-gray-50 flex !justify-center text-center px-4 pt-12">
       <ToolWrapper
         title="Crop Image"
         description="Crop your image like Photoshop — resize the crop box and download the cropped image."

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, FileText, ArrowRight } from "lucide-react";
+import { Upload, FileText, ArrowRight, Download } from "lucide-react";
+import { Button } from "./ui/button";
 
 type FileConverterProps = {
   title: string;
@@ -28,9 +29,13 @@ export default function FileConverter({
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFile(e.target.files?.[0] || null);
+    setReady(false);
+    setDownloadUrl(null);
   };
 
   const handleButtonClick = () => {
@@ -41,6 +46,7 @@ export default function FileConverter({
     if (!file) return;
 
     setLoading(true);
+    setDownloadUrl(null);
 
     try {
       const formData = new FormData();
@@ -54,12 +60,8 @@ export default function FileConverter({
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = outputFileName;
-      a.click();
-
-      URL.revokeObjectURL(url);
+      setDownloadUrl(url);
+      setReady(true);
     } finally {
       setLoading(false);
     }
@@ -84,12 +86,20 @@ export default function FileConverter({
     }
   };
 
+  const handleDownload = () => {
+    if (!downloadUrl) return;
+
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = outputFileName;
+    a.click();
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center px-4 pt-24">
+    <div className="bg-gray-50 flex justify-center px-4 pt-12 pb-8">
       <div className="w-full max-w-3xl text-center">
         {/* Heading */}
         <h1 className="text-4xl font-bold text-gray-800 mb-4">{title}</h1>
-
         {/* Description with icons */}
         <p className="text-gray-600 flex items-center justify-center gap-2 flex-wrap">
           {description}
@@ -103,6 +113,16 @@ export default function FileConverter({
             {toIcon}
           </div>
         </div>
+        {file && (
+          <div className="my-2 flex flex-col justify-center items-center">
+            <img
+              src={URL.createObjectURL(file)}
+              alt="Selected"
+              className="max-h-16 rounded border"
+            />
+          </div>
+        )}
+
         {/* Hidden input */}
         <input
           ref={inputRef}
@@ -116,28 +136,39 @@ export default function FileConverter({
           <button
             onClick={handleButtonClick}
             className="mx-auto flex items-center justify-center gap-3
-                       bg-blue-600 hover:bg-blue-700
-                       text-white text-lg font-semibold
-                       px-10 py-6 rounded-xl
-                       shadow-lg transition"
+               bg-blue-600 hover:bg-blue-700
+               text-white text-lg font-semibold
+               px-10 py-6 rounded-xl
+               shadow-lg transition"
           >
             <Upload className="w-6 h-6" />
             {buttonText}
+          </button>
+        ) : ready ? (
+          <button
+            onClick={handleDownload}
+            className="mx-auto flex items-center justify-center gap-3
+               bg-red-600 hover:bg-red-700
+               text-white text-lg font-semibold
+               px-10 py-6 rounded-xl
+               shadow-lg transition"
+          >
+            <Download className="!w-6 !h-6" />
+            Download Now (1)
           </button>
         ) : (
           <button
             onClick={handleConvert}
             disabled={loading}
             className="mx-auto flex items-center justify-center gap-3
-                       bg-green-600 hover:bg-green-700
-                       text-white text-lg font-semibold
-                       px-10 py-6 rounded-xl
-                       shadow-lg transition"
+               bg-green-600 hover:bg-green-700
+               text-white text-lg font-semibold
+               px-10 py-6 rounded-xl
+               shadow-lg transition"
           >
             {loading ? "Converting..." : "Convert Now"}
           </button>
         )}
-
         {/* drag and drop */}
         <div
           onDragOver={handleDragOver}
@@ -153,19 +184,30 @@ export default function FileConverter({
         : "border-gray-300 hover:border-blue-400"
     }
   `}
-        ><div className="flex flex-col items-center">
-             <img
-            className="h-12 w-12 opacity-50"
-            src="./dragdrop.png"
-            alt="drag and drop"
+        >
+          <div className="flex flex-col items-center">
+            <img
+              className="h-12 w-12 opacity-50"
+              src="./dragdrop.png"
+              alt="drag and drop"
             />
-          <p className="text-gray-600 font-medium">
-            Drag & drop your file here
-          </p>
-          <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+            <p className="text-gray-600 font-medium">
+              Drag & drop your file here
+            </p>
+            <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+          </div>
         </div>
-           
-        </div>
+        {file && (
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end mr-24 mt-2">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setFile(null)}
+            >
+              Reset
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

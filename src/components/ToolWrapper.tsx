@@ -15,7 +15,7 @@ const ToolWrapper: React.FC<ToolWrapperProps> = ({
   children,
 }) => {
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto ">
       <h1 className="text-4xl font-bold mb-2">{title}</h1>
       {description && <p className="mb-2 text-gray-600">{description}</p>}
       {afterDescription && <div className="mb-2">{afterDescription}</div>}
