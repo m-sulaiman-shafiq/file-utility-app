@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { Download, Loader2, Upload } from "lucide-react";
 
 import {
   Select,
@@ -137,15 +137,52 @@ export default function ImageCompressorPage() {
               </p>
               <div className="mt-4 flex flex-col items-center">
                 <Button
-                  variant="primary"
-                  className="rounded-xl"
                   size="xl"
-                  onClick={handleUploadClick}
-                  disabled={isCompressing}
+                  className={`rounded-xl transition font-semibold ${
+                    compressedFile
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : file
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : ""
+                  }`}
+                  disabled={isCompressing || (file && !canCompress)}
+                  onClick={() => {
+                    if (!file) {
+                      handleUploadClick();
+                    } else if (file && !compressedFile) {
+                      handleCompress();
+                    } else if (compressedFile) {
+                      const url = URL.createObjectURL(compressedFile);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = compressedFile.name;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }
+                  }}
                 >
-                  <Upload className="!w-6 !h-6" />
-                  Upload Image
+                  {isCompressing ? (
+                    <>
+                      <Loader2 className="!w-6 !h-6 animate-spin" />
+                      Compressing...
+                    </>
+                  ) : compressedFile ? (
+                    <>
+                      <Download className="!w-6 !h-6" />
+                      Download Image
+                    </>
+                  ) : file ? (
+                    <>
+                      Compress Image
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="!w-6 !h-6" />
+                      Upload Image
+                    </>
+                  )}
                 </Button>
+
                 {isCompressing && (
                   <p className="text-xs pt-2 text-red-600 font-bold">
                     Compressing image, please wait…
@@ -183,22 +220,7 @@ export default function ImageCompressorPage() {
                         </p>
                       </div>
                     )}
-                    {compressedFile && (
-                      <Button
-                        variant="destructive"
-                        className="mt-3 rounded-xl"
-                        onClick={() => {
-                          const url = URL.createObjectURL(compressedFile);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = compressedFile.name;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                        }}
-                      >
-                        Download Compressed Image
-                      </Button>
-                    )}
+                   
                   </div>
                 )}
               </div>
@@ -292,15 +314,6 @@ export default function ImageCompressorPage() {
                 >
                   Reset
                 </Button>
-                {!compressedFile && (
-                  <Button
-                    className="rounded-xl"
-                    disabled={isCompressing || !file || !canCompress}
-                    onClick={handleCompress}
-                  >
-                    Compress Image
-                  </Button>
-                )}
               </div>
             )}
           </CardContent>
