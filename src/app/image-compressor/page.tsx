@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
-import { Download, Loader2, Upload } from "lucide-react";
+import { ArrowRight, Download, Image, Loader2, Upload } from "lucide-react";
 
 import {
   Select,
@@ -26,6 +26,7 @@ export default function ImageCompressorPage() {
   const [file, setFile] = useState<File | null>(null);
   const [compressedFile, setCompressedFile] = useState<File | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [mode, setMode] = useState<Mode>("targetSize");
 
@@ -114,128 +115,191 @@ export default function ImageCompressorPage() {
     setFile(null);
     setCompressedFile(null);
   }
+  //Drag and drop logic
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) {
+      setFile(droppedFile);
+      setCompressedFile(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
 
   return (
-    <div className="bg-gray-50">
-      <div className=" w-full max-w-3xl mx-auto p-4 md:p-6">
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-4xl font-bold text-center">
-              Image Compressor
-            </CardTitle>
-            <p className="text-sm text-muted-foreground text-center">
-              Compress JPG/PNG/WebP images by selecting either a target size or
-              a percentage.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Upload placeholder (we will connect later) */}
-            <div className="rounded-2xl border-2 border-dashed p-6 text-center">
-              <p className="text-sm font-medium">Drop your image here</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                or click upload (we will connect upload logic next)
-              </p>
-              <div className="mt-4 flex flex-col items-center">
-                <Button
-                  size="xl"
-                  className={`rounded-xl transition font-semibold ${
-                    compressedFile
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : file
-                        ? "bg-green-600 hover:bg-green-700 text-white"
-                        : ""
-                  }`}
-                  disabled={isCompressing || (file && !canCompress)}
-                  onClick={() => {
-                    if (!file) {
-                      handleUploadClick();
-                    } else if (file && !compressedFile) {
-                      handleCompress();
-                    } else if (compressedFile) {
-                      const url = URL.createObjectURL(compressedFile);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = compressedFile.name;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }
-                  }}
-                >
-                  {isCompressing ? (
-                    <>
-                      <Loader2 className="!w-6 !h-6 animate-spin" />
-                      Compressing...
-                    </>
-                  ) : compressedFile ? (
-                    <>
-                      <Download className="!w-6 !h-6" />
-                      Download Image
-                    </>
-                  ) : file ? (
-                    <>
-                      Compress Image
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="!w-6 !h-6" />
-                      Upload Image
-                    </>
-                  )}
-                </Button>
-
-                {isCompressing && (
-                  <p className="text-xs pt-2 text-red-600 font-bold">
-                    Compressing image, please wait…
-                  </p>
-                )}
-
-                {file && (
-                  <div className="mt-4 flex flex-col justify-center items-center">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt="Selected"
-                      className="max-h-16 rounded border"
-                    />
-                    {file && (
-                      <p className="text-[10px] ">
-                        Current Size:{" "}
-                        <span className="font-bold">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </span>
-                      </p>
-                    )}
-                    {compressedFile && (
-                      <div className="mt-4 rounded-xl border p-3">
-                        <p className="text-sm font-medium text-green-600">
-                          Compression successful 🎉
-                        </p>
-
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Original: {(file!.size / 1024).toFixed(1)} KB
-                          {" → "}
-                          Compressed: {(compressedFile.size / 1024).toFixed(
-                            1,
-                          )}{" "}
-                          KB
-                        </p>
-                      </div>
-                    )}
-                   
-                  </div>
-                )}
-              </div>
+    <div className=" w-full max-w-3xl mx-auto p-4 md:p-6">
+      <Card className="!rounded-none shadow-none !border-none">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-4xl font-bold text-center">
+            Image Compressor
+          </CardTitle>
+          <p className="text-sm text-muted-foreground text-center">
+            Compress JPG/PNG/WebP images by selecting either a target size or a
+            percentage.
+          </p>
+          <div className="flex items-center justify-center">
+            <div className="w-14 h-14 flex items-center justify-center rounded-xl">
+              <Image className="w-8 h-8 text-green-600" />
             </div>
+            <ArrowRight className="w-6 h-6 text-gray-400" />
+            <div className="w-14 h-14 flex items-center justify-center rounded-xl">
+              <img src="/compressIcon.png" className="size-100" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Upload placeholder (we will connect later) */}
+          <div className="rounded-2xl p-6 text-center">
+            <div className="mt-4 flex flex-col items-center">
+              <Button
+                variant="primary"
+                size="xl"
+                className={`rounded-xl transition font-semibold ${
+                  compressedFile
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : file
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : ""
+                }`}
+                disabled={isCompressing || (file && !canCompress)}
+                onClick={() => {
+                  if (!file) {
+                    handleUploadClick();
+                  } else if (file && !compressedFile) {
+                    handleCompress();
+                  } else if (compressedFile) {
+                    const url = URL.createObjectURL(compressedFile);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = compressedFile.name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                {isCompressing ? (
+                  <>
+                    <Loader2 className="!w-6 !h-6 animate-spin" />
+                    Compressing...
+                  </>
+                ) : compressedFile ? (
+                  <>
+                    <Download className="!w-6 !h-6" />
+                    Download Image
+                  </>
+                ) : file ? (
+                  <>Compress Image</>
+                ) : (
+                  <>
+                    <Upload className="!w-6 !h-6" />
+                    Upload Image
+                  </>
+                )}
+              </Button>
 
-            {/* Two-row compressor controls */}
-            <RadioGroup value={mode} onValueChange={(v) => setMode(v as Mode)}>
+              {isCompressing && (
+                <p className="text-xs pt-2 text-red-600 font-bold">
+                  Compressing image, please wait…
+                </p>
+              )}
+
+              {file && (
+                <div className="mt-4 flex flex-col justify-center items-center">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Selected"
+                    className="max-h-16 rounded border"
+                  />
+                  {file && (
+                    <p className="text-[10px] ">
+                      Current Size:{" "}
+                      <span className="font-bold">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </span>
+                    </p>
+                  )}
+                  {compressedFile && (
+                    <div className="mt-4 rounded-xl border p-3">
+                      <p className="text-sm font-medium text-green-600">
+                        Compression successful 🎉
+                      </p>
+
+                      <p className="text-xs font-bold text-blue-600 mt-1">
+                        Original: {(file!.size / 1024).toFixed(1)} KB
+                        {" → "}
+                        Compressed: {(compressedFile.size / 1024).toFixed(1)}
+                        KB
+                      </p>
+                    </div>
+                  )}
+                  {file && (
+                    <div className="flex flex-col mt-4 sm:flex-row gap-3 sm:items-center sm:justify-end">
+                      <Button
+                        variant="outline"
+                        className="rounded-xl"
+                        onClick={handleReset}
+                      >
+                        Reset
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* drag and drop code */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            // onClick={handleButtonClick}
+            className={`mt-6 mx-auto max-w-xl
+    border-2 border-dashed rounded-xl
+    px-6 py-20 cursor-pointer transition bg-white hover:bg-gray-100
+    ${
+      isDragging
+        ? "border-blue-600 bg-blue-50"
+        : "border-gray-300 hover:border-blue-400"
+    }
+  `}
+          >
+            <div className="flex flex-col items-center">
+              <img
+                className="h-12 w-12 opacity-50"
+                src="./dragdrop.png"
+                alt="drag and drop"
+              />
+              <p className="text-gray-600 font-medium">
+                Drag & drop your file here
+              </p>
+              <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+            </div>
+          </div>
+          {/* Two-row compressor controls */}
+          <RadioGroup value={mode} onValueChange={(v) => setMode(v as Mode)}>
+            <div className="flex flex-col gap-3 rounded-2xl border p-2">
               {/* Row 1 */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-2">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                 <div className="flex items-center gap-3 md:w-[260px]">
                   <RadioGroupItem value="targetSize" id="targetSize" />
                   <Label htmlFor="targetSize" className="font-medium">
                     Compress image to:
                   </Label>
                 </div>
+
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
                   <Input
                     value={targetSize}
@@ -265,8 +329,11 @@ export default function ImageCompressorPage() {
                 </div>
               </div>
 
+              {/* Divider (optional for visual separation) */}
+              <div className="h-px bg-border" />
+
               {/* Row 2 */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 rounded-2xl border p-2">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                 <div className="flex items-center gap-3 md:w-[260px]">
                   <RadioGroupItem value="percentage" id="percentage" />
                   <Label htmlFor="percentage" className="font-medium">
@@ -290,51 +357,40 @@ export default function ImageCompressorPage() {
                   </p>
                 </div>
               </div>
-            </RadioGroup>
-            {/* Validation messages */}
-            <div className="space-y-2">
-              {isTargetSizeMode && !isValidTargetSize && (
-                <p className="text-sm text-destructive">
-                  Please enter a valid target size.
-                </p>
-              )}
-
-              {isPercentageMode && !isValidPercentage && (
-                <p className="text-sm text-destructive">
-                  Please enter a percentage between 1 and 99.
-                </p>
-              )}
             </div>
-            {file && (
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
-                <Button
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={handleReset}
-                >
-                  Reset
-                </Button>
-              </div>
+          </RadioGroup>
+          {/* Validation messages */}
+          <div className="space-y-2">
+            {isTargetSizeMode && !isValidTargetSize && (
+              <p className="text-sm text-destructive">
+                Please enter a valid target size.
+              </p>
             )}
-          </CardContent>
-        </Card>
-        {/* INput for Upload BUtton */}
-        <Input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={(e) => {
-            const selected = e.target.files?.[0];
-            if (selected) {
-              // console.log("Selected file now:", selected);
 
-              setFile(selected);
-              setCompressedFile(null);
-            }
-          }}
-        />
-      </div>
+            {isPercentageMode && !isValidPercentage && (
+              <p className="text-sm text-destructive">
+                Please enter a percentage between 1 and 99.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      {/* INput for Upload BUtton */}
+      <Input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const selected = e.target.files?.[0];
+          if (selected) {
+            // console.log("Selected file now:", selected);
+
+            setFile(selected);
+            setCompressedFile(null);
+          }
+        }}
+      />
     </div>
   );
 }
