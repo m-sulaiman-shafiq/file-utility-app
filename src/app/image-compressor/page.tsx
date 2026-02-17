@@ -45,7 +45,7 @@ export default function ImageCompressorPage() {
 
   const targetSizeHelper = useMemo(() => {
     // show range based on unit
-    if (targetUnit === "KB") return "from 1 KB to 30,000 KB (default 200 KB)";
+    if (targetUnit === "KB") return "from 1 KB to 30,000 KB";
     return "from 0.1 MB to 30.0 MB (default 0.2 MB)";
   }, [targetUnit]);
 
@@ -156,60 +156,152 @@ export default function ImageCompressorPage() {
             </div>
             <ArrowRight className="w-6 h-6 text-gray-400" />
             <div className="w-14 h-14 flex items-center justify-center rounded-xl">
-              <img src="/compressIcon.png" className="size-100" />
+              <img src="/compress.png" className="w-19 pl-3" />
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Upload placeholder (we will connect later) */}
-          <div className="rounded-2xl p-6 text-center">
-            <div className="mt-4 flex flex-col items-center">
-              <Button
-                variant="primary"
-                size="xl"
-                className={`rounded-xl transition font-semibold ${
-                  compressedFile
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : file
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : ""
-                }`}
-                disabled={isCompressing || (file && !canCompress)}
-                onClick={() => {
-                  if (!file) {
-                    handleUploadClick();
-                  } else if (file && !compressedFile) {
-                    handleCompress();
-                  } else if (compressedFile) {
-                    const url = URL.createObjectURL(compressedFile);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = compressedFile.name;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }
-                }}
-              >
-                {isCompressing ? (
-                  <>
-                    <Loader2 className="!w-6 !h-6 animate-spin" />
-                    Compressing...
-                  </>
-                ) : compressedFile ? (
-                  <>
-                    <Download className="!w-6 !h-6" />
-                    Download Image
-                  </>
-                ) : file ? (
-                  <>Compress Image</>
-                ) : (
-                  <>
-                    <Upload className="!w-6 !h-6" />
-                    Upload Image
-                  </>
-                )}
-              </Button>
+          <div className="rounded-2xl px-6 text-center">
+            <div className="mt-0 flex flex-col text-center items-center">
+              <div className="flex items-center justify-between gap-4">
+                <Button
+                  variant="primary"
+                  size="xl"
+                  className={`rounded-xl transition font-semibold ${
+                    compressedFile
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : file
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : ""
+                  }`}
+                  disabled={isCompressing || (file && !canCompress)}
+                  onClick={() => {
+                    if (!file) {
+                      handleUploadClick();
+                    } else if (file && !compressedFile) {
+                      handleCompress();
+                    } else if (compressedFile) {
+                      const url = URL.createObjectURL(compressedFile);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = compressedFile.name;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }
+                  }}
+                >
+                  {isCompressing ? (
+                    <>
+                      <Loader2 className="!w-6 !h-6 animate-spin" />
+                      Compressing...
+                    </>
+                  ) : compressedFile ? (
+                    <>
+                      <Download className="!w-6 !h-6" />
+                      Download Image
+                    </>
+                  ) : file ? (
+                    <>Compress Image</>
+                  ) : (
+                    <>
+                      <Upload className="!w-6 !h-6" />
+                      Upload Image
+                    </>
+                  )}
+                </Button>
+                {/* Two-row compressor controls */}
+                <RadioGroup
+                  value={mode}
+                  onValueChange={(v) => setMode(v as Mode)}
+                >
+                  <div className="flex flex-col gap-0 rounded-2xl border p-2">
+                    {/* Row 1 */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <div className="flex items-center gap-3 md:w-[260px]">
+                        <RadioGroupItem value="targetSize" id="targetSize" />
+                        <Label htmlFor="targetSize" className="font-medium">
+                          Compress image to:
+                        </Label>
+                      </div>
 
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
+                        <Input
+                          value={targetSize}
+                          onChange={(e) => setTargetSize(e.target.value)}
+                          disabled={!isTargetSizeMode}
+                          inputMode="decimal"
+                          className="rounded-xl sm:w-[80px]"
+                        />
+
+                        <Select
+                          value={targetUnit}
+                          onValueChange={(v) => setTargetUnit(v as SizeUnit)}
+                          disabled={!isTargetSizeMode}
+                        >
+                          <SelectTrigger className="rounded-xl sm:w-[120px]">
+                            <SelectValue placeholder="Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="KB">Kbytes</SelectItem>
+                            <SelectItem value="MB">Mbytes</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <p className="text-xs text-muted-foreground">
+                          ({targetSizeHelper})
+                        </p>
+                      </div>
+                    </div>
+                    {/* Divider (optional for visual separation) */}
+                    {/* <div className="h-px bg-border" /> */}
+                    {/* Row 2 */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <div className="flex items-center gap-3 md:w-[260px]">
+                        <RadioGroupItem value="percentage" id="percentage" />
+                        <Label htmlFor="percentage" className="font-medium">
+                          Compress image by:
+                        </Label>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
+                        <Input
+                          value={percentage}
+                          onChange={(e) => setPercentage(e.target.value)}
+                          disabled={!isPercentageMode}
+                          inputMode="numeric"
+                          className="rounded-xl sm:w-[80px]"
+                        />
+
+                        <p className="text-sm font-medium">%</p>
+
+                        <p className="text-xs text-muted-foreground">
+                          (1% to 99%)
+                        </p>
+                        {isPercentageMode && !isValidPercentage && (
+                          <p className="text-[12px] text-destructive">
+                            Please enter 1 to 99 only.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+              {compressedFile && (
+                <div className="mt-4 rounded-xl border p-3">
+                  <p className="text-sm font-medium text-green-600">
+                    Compression successful 🎉
+                  </p>
+
+                  <p className="text-xs font-bold text-blue-600 mt-1">
+                    Original: {(file!.size / 1024).toFixed(1)} KB
+                    {" → "}
+                    Compressed: {(compressedFile.size / 1024).toFixed(1)}
+                    KB
+                  </p>
+                </div>
+              )}
               {isCompressing && (
                 <p className="text-xs pt-2 text-red-600 font-bold">
                   Compressing image, please wait…
@@ -231,20 +323,7 @@ export default function ImageCompressorPage() {
                       </span>
                     </p>
                   )}
-                  {compressedFile && (
-                    <div className="mt-4 rounded-xl border p-3">
-                      <p className="text-sm font-medium text-green-600">
-                        Compression successful 🎉
-                      </p>
 
-                      <p className="text-xs font-bold text-blue-600 mt-1">
-                        Original: {(file!.size / 1024).toFixed(1)} KB
-                        {" → "}
-                        Compressed: {(compressedFile.size / 1024).toFixed(1)}
-                        KB
-                      </p>
-                    </div>
-                  )}
                   {file && (
                     <div className="flex flex-col mt-4 sm:flex-row gap-3 sm:items-center sm:justify-end">
                       <Button
@@ -288,88 +367,12 @@ export default function ImageCompressorPage() {
               <p className="text-sm text-gray-400 mt-1">or click to browse</p>
             </div>
           </div>
-          {/* Two-row compressor controls */}
-          <RadioGroup value={mode} onValueChange={(v) => setMode(v as Mode)}>
-            <div className="flex flex-col gap-3 rounded-2xl border p-2">
-              {/* Row 1 */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                <div className="flex items-center gap-3 md:w-[260px]">
-                  <RadioGroupItem value="targetSize" id="targetSize" />
-                  <Label htmlFor="targetSize" className="font-medium">
-                    Compress image to:
-                  </Label>
-                </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
-                  <Input
-                    value={targetSize}
-                    onChange={(e) => setTargetSize(e.target.value)}
-                    disabled={!isTargetSizeMode}
-                    inputMode="decimal"
-                    className="rounded-xl sm:w-[140px]"
-                  />
-
-                  <Select
-                    value={targetUnit}
-                    onValueChange={(v) => setTargetUnit(v as SizeUnit)}
-                    disabled={!isTargetSizeMode}
-                  >
-                    <SelectTrigger className="rounded-xl sm:w-[120px]">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="KB">Kbytes</SelectItem>
-                      <SelectItem value="MB">Mbytes</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <p className="text-xs text-muted-foreground">
-                    ({targetSizeHelper})
-                  </p>
-                </div>
-              </div>
-
-              {/* Divider (optional for visual separation) */}
-              <div className="h-px bg-border" />
-
-              {/* Row 2 */}
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                <div className="flex items-center gap-3 md:w-[260px]">
-                  <RadioGroupItem value="percentage" id="percentage" />
-                  <Label htmlFor="percentage" className="font-medium">
-                    Compress image by:
-                  </Label>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full">
-                  <Input
-                    value={percentage}
-                    onChange={(e) => setPercentage(e.target.value)}
-                    disabled={!isPercentageMode}
-                    inputMode="numeric"
-                    className="rounded-xl sm:w-[140px]"
-                  />
-
-                  <p className="text-sm font-medium">%</p>
-
-                  <p className="text-xs text-muted-foreground">
-                    (can be specified from 1% to 99%)
-                  </p>
-                </div>
-              </div>
-            </div>
-          </RadioGroup>
           {/* Validation messages */}
           <div className="space-y-2">
             {isTargetSizeMode && !isValidTargetSize && (
               <p className="text-sm text-destructive">
                 Please enter a valid target size.
-              </p>
-            )}
-
-            {isPercentageMode && !isValidPercentage && (
-              <p className="text-sm text-destructive">
-                Please enter a percentage between 1 and 99.
               </p>
             )}
           </div>
