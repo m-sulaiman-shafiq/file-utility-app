@@ -11,6 +11,32 @@ import { Download, Upload } from "lucide-react";
 
 export default function CropImagePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) return;
+
+    handleUpload(file);
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const [zoom, setZoom] = useState(1);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -66,7 +92,7 @@ export default function CropImagePage() {
         0,
         0,
         completedCrop.width * scaleX,
-        completedCrop.height * scaleY
+        completedCrop.height * scaleY,
       );
 
       canvas.toBlob((blob) => {
@@ -111,7 +137,7 @@ export default function CropImagePage() {
   };
 
   return (
-    <div className="bg-gray-50 flex !justify-center text-center px-4 pt-12">
+    <div className="bg-gray-50 min-h-screen flex !justify-center text-center px-4 pt-12">
       <ToolWrapper
         title="Crop Image"
         description="Crop your image like Photoshop — resize the crop box and download the cropped image."
@@ -230,6 +256,36 @@ export default function CropImagePage() {
               </Button>
             </div>
           </>
+        )}
+        {/* drag and drop */}
+        {!imageSrc && (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleButtonClick}
+            className={`mt-6 mx-auto max-w-xl
+    border-2 border-dashed rounded-xl
+    px-6 py-20 cursor-pointer transition bg-white hover:bg-gray-100
+    ${
+      isDragging
+        ? "border-blue-600 bg-blue-50"
+        : "border-gray-300 hover:border-blue-400"
+    }
+  `}
+          >
+            <div className="flex flex-col items-center">
+              <img
+                className="h-12 w-12 opacity-50"
+                src="./dragdrop.png"
+                alt="drag and drop"
+              />
+              <p className="text-gray-600 font-medium">
+                Drag & drop your file here
+              </p>
+              <p className="text-sm text-gray-400 mt-1">or click to browse</p>
+            </div>
+          </div>
         )}
       </ToolWrapper>
     </div>
